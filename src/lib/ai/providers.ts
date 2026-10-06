@@ -32,10 +32,14 @@ export async function getModel(
     }
     const apiKey = await resolveApiKey(userId, "openai-compatible-key");
     const root = openaiCompatibleRoot(credential);
+    // Local OpenAI-compatible servers (llama.cpp, llama-swap, LM Studio)
+    // implement Chat Completions. createOpenAI()(model) uses the Responses
+    // API, whose stream (text-delta without text-start) fails in agent chat.
     return createOpenAI({
       baseURL: `${root}/v1`,
       apiKey: apiKey || "",
-    })(modelName);
+      name: "openai-compatible",
+    }).chat(modelName);
   }
 
   const factory = PROVIDER_FACTORIES[provider];

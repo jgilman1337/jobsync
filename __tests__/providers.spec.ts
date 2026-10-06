@@ -100,8 +100,8 @@ describe("getModel – openai-compatible", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    const mockChainFn = vi.fn().mockReturnValue(mockModelInstance);
-    (createOpenAI as any).mockReturnValue(mockChainFn);
+    const mockChat = vi.fn().mockReturnValue(mockModelInstance);
+    (createOpenAI as any).mockReturnValue({ chat: mockChat });
     (resolveApiKey as any).mockImplementation(
       async (_userId: string | undefined, provider: string) => {
         if (provider === "openai-compatible") return "http://127.0.0.1:1234";
@@ -111,13 +111,17 @@ describe("getModel – openai-compatible", () => {
     );
   });
 
-  it("builds a client from base URL and optional API key", async () => {
+  it("builds a Chat Completions client from base URL and optional API key", async () => {
     const result = await getModel("openai-compatible", "local-model", "user-1");
 
     expect(createOpenAI).toHaveBeenCalledWith({
       baseURL: "http://127.0.0.1:1234/v1",
       apiKey: "sk-local",
+      name: "openai-compatible",
     });
+    expect((createOpenAI as any).mock.results[0].value.chat).toHaveBeenCalledWith(
+      "local-model",
+    );
     expect(result).toBe(mockModelInstance);
   });
 
